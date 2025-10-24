@@ -318,17 +318,45 @@
                 setViewMode('dashboard');
             };
 
+            const getTotalWeeklyCost = () => {
+                return services.reduce((total, service) => {
+                    let weeklyCost = 0;
+                    if (service.billingCycle === 'weekly') {
+                        weeklyCost = service.cost;
+                    } else if (service.billingCycle === 'monthly') {
+                        weeklyCost = service.cost / 4.33; // Average weeks per month
+                    } else if (service.billingCycle === 'yearly') {
+                        weeklyCost = service.cost / 52;
+                    }
+                    return total + weeklyCost;
+                }, 0);
+            };
+
             const getTotalMonthlyCost = () => {
                 return services.reduce((total, service) => {
-                    const cost = service.billingCycle === 'yearly' ? service.cost / 12 : service.cost;
-                    return total + cost;
+                    let monthlyCost = 0;
+                    if (service.billingCycle === 'weekly') {
+                        monthlyCost = service.cost * 4.33; // Average weeks per month
+                    } else if (service.billingCycle === 'monthly') {
+                        monthlyCost = service.cost;
+                    } else if (service.billingCycle === 'yearly') {
+                        monthlyCost = service.cost / 12;
+                    }
+                    return total + monthlyCost;
                 }, 0);
             };
 
             const getTotalYearlyCost = () => {
                 return services.reduce((total, service) => {
-                    const cost = service.billingCycle === 'yearly' ? service.cost : service.cost * 12;
-                    return total + cost;
+                    let yearlyCost = 0;
+                    if (service.billingCycle === 'weekly') {
+                        yearlyCost = service.cost * 52;
+                    } else if (service.billingCycle === 'monthly') {
+                        yearlyCost = service.cost * 12;
+                    } else if (service.billingCycle === 'yearly') {
+                        yearlyCost = service.cost;
+                    }
+                    return total + yearlyCost;
                 }, 0);
             };
 
@@ -381,8 +409,7 @@
                                     <h1 className="text-4xl font-bold text-gray-800 mb-2">LifeHub ☁️</h1>
                                     <p className="text-gray-600">
                                         Your personal life administration tracker
-                                        {user && <span className="text-green-600 ml-2">• Logged in as {user.email}</span>}
-                                        {!user && <span className="text-orange-600 ml-2">• Using local storage only</span>}
+                                        {user && <span className="text-green-600 ml-2">• Signed in as {user.email}</span>}
                                     </p>
                                 </div>
                                 <div className="flex gap-3">
@@ -412,7 +439,13 @@
                         </header>
 
                         {/* Cost Summary */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+                            <div className="glass-effect rounded-2xl p-6 shadow-lg">
+                                <div className="text-sm text-gray-600 mb-1">Weekly Total</div>
+                                <div className="text-3xl font-bold text-green-600">
+                                    ${getTotalWeeklyCost().toFixed(2)}
+                                </div>
+                            </div>
                             <div className="glass-effect rounded-2xl p-6 shadow-lg">
                                 <div className="text-sm text-gray-600 mb-1">Monthly Total</div>
                                 <div className="text-3xl font-bold text-indigo-600">
@@ -554,7 +587,10 @@
                                 setShowServiceDetailModal(false);
                                 setSelectedService(null);
                             }}
-                            onEdit={() => setShowEditModal(true)}
+                            onEdit={() => {
+                                setShowEditModal(true);
+                                setShowCategoryModal(false); // Close the category modal
+                            }}
                             onDelete={deleteService}
                         />
                     )}
@@ -682,6 +718,7 @@
                                         onChange={(e) => setFormData({...formData, billingCycle: e.target.value})}
                                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                                     >
+                                        <option value="weekly">Weekly</option>
                                         <option value="monthly">Monthly</option>
                                         <option value="yearly">Yearly</option>
                                     </select>
@@ -944,6 +981,7 @@
                                         onChange={(e) => setFormData({...formData, billingCycle: e.target.value})}
                                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                                     >
+                                        <option value="weekly">Weekly</option>
                                         <option value="monthly">Monthly</option>
                                         <option value="yearly">Yearly</option>
                                     </select>
